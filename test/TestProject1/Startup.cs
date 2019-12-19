@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using Autofac.Extras.CommonServiceLocator;
@@ -10,6 +11,7 @@ namespace TestProject1
 {
     public static class Startup
     {
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")] 
         public static bool Initialized { get; private set; }
         
         public static void Configure()

@@ -1,0 +1,25 @@
+{
+  "defaultAssembly": "ClassLibrary1",
+  "components": [
+    {
+      "type": "ClassLibrary1.ConsoleOutput",
+      "services": [
+        {
+          "type": "ClassLibrary1.IOutput"
+        }
+      ],
+      "autoActivate": true,
+      "injectProperties": true
+    },
+    {
+      "type": "ClassLibrary1.TodayWriter",
+      "services": [
+        {
+          "type": "ClassLibrary1.IDateWriter"
+        }
+      ],
+      "autoActivate": true,
+      "injectProperties": true
+    }
+  ]
+}

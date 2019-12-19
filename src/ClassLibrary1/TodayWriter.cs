@@ -4,7 +4,8 @@ namespace ClassLibrary1
 {
     public class TodayWriter : IDateWriter
     {
-        private IOutput _output;
+        private readonly IOutput _output;
+        
         public TodayWriter(IOutput output)
         {
             this._output = output;

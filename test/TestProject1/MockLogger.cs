@@ -36,7 +36,6 @@ namespace TestProject1
     {
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
 
         public ILogger CreateLogger(string categoryName)
