@@ -7,7 +7,7 @@ Created this just to play around with some dependency injection in dotnet for a 
 ### ClassLibrary1
 
 Just a simple library with some interfaces and implementations to test dependency injection with. A lot of this came from 
-[Gunnar Piepman](https://gunnarpeipman.com/dotnet-core-dependency-injection/)
+[Gunnar Piepman](https://gunnarpeipman.com/dotnet-core-dependency-injection/),
 [Microsoft](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-3.1) and 
 [Autofac](https://autofac.readthedocs.io/en/latest/getting-started/index.html) sites.
 
