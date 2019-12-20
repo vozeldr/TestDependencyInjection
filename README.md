@@ -24,7 +24,8 @@ Uses the Microsoft CommonServiceLocator, backed by Autofac. Microsoft logging is
 
 ### ConsoleApp2
 
-Basically the same as ConsoleApp1 except that it also gets part of its Autofac configuration from a json file.
+Basically the same as ConsoleApp1 except that it also gets part of its Autofac configuration from a json file and it uses the new 
+Generic Host Builder pattern.
 
 ### TestProject1
 

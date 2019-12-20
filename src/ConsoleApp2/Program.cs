@@ -1,4 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Threading;
+using System.Threading.Tasks;
 using Autofac;
 using Autofac.Configuration;
 using Autofac.Extensions.DependencyInjection;
@@ -7,6 +10,7 @@ using ClassLibrary1;
 using CommonServiceLocator;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Serilog;
 
@@ -16,34 +20,81 @@ namespace ConsoleApp2
     public class Program
     {
         [SuppressMessage("ReSharper", "UnusedParameter.Global")]
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
-            RegisterServices();
-            
-            AsyncMessageWriter asyncMessageWriter = new AsyncMessageWriter(ServiceLocator.Current.GetService<ILogger<AsyncMessageWriter>>());
-            asyncMessageWriter.WriteMessage("Here is a test message.").Wait(100);
-
-            IDateWriter writer = ServiceLocator.Current.GetService<IDateWriter>();
-            writer.WriteDate();
+            await CreateHostBuilder(args).RunConsoleAsync();
         }
 
-        static void RegisterServices()
+        public static IHostBuilder CreateHostBuilder(string[] args) =>
+            Host.CreateDefaultBuilder(args)
+                .UseServiceProviderFactory(new AutofacServiceProviderFactory())
+                .ConfigureHostConfiguration(builder => { })
+                .ConfigureAppConfiguration((context, builder) =>
+                {
+                    builder.AddJsonFile("appsettings.json", optional: true);
+                    builder.AddEnvironmentVariables();
+
+                    if (args != null)
+                    {
+                        builder.AddCommandLine(args);
+                    }
+                })
+                .ConfigureServices((context, collection) =>
+                {
+                    collection.AddOptions();
+                    collection.Configure<AppConfig>(context.Configuration.GetSection("AppConfig"));
+                    ConfigurationBuilder config = new ConfigurationBuilder();
+                    config.AddJsonFile("autofac.config.json");
+
+                    ConfigurationModule module = new ConfigurationModule(config.Build());
+
+                    ContainerBuilder builder = new ContainerBuilder();
+                    builder.Populate(collection);
+                    builder.RegisterModule(module);
+
+                    builder.RegisterType<App>().As<IHostedService>().SingleInstance();
+                    IContainer appContainer = builder.Build();
+
+                    AutofacServiceLocator locator = new AutofacServiceLocator(appContainer);
+                    ServiceLocator.SetLocatorProvider(() => locator);
+                })
+                .ConfigureLogging((context, builder) => builder.AddConsole().AddSerilog());
+    }
+
+    public class AppConfig
+    {
+        public string Test { get; set; }
+    }
+
+    public class App : IHostedService, IDisposable
+    {
+        private readonly IDateWriter _writer;
+        private readonly ILogger<App> _logger;
+        private readonly ILoggerFactory _loggerFactory;
+
+        public App(IDateWriter writer, ILoggerFactory loggerFactory)
         {
-            ConfigurationBuilder config = new ConfigurationBuilder();
-            config.AddJsonFile("autofac.config.json");
-
-            ConfigurationModule module = new ConfigurationModule(config.Build());
-
-            ServiceCollection collection = new ServiceCollection();
-            ContainerBuilder builder = new ContainerBuilder();
-            collection.AddLogging(c => c.AddConsole().AddSerilog());
-            builder.Populate(collection);
-            builder.RegisterModule(module);
+            _writer = writer;
+            _logger = loggerFactory.CreateLogger<App>();
+            _loggerFactory = loggerFactory;
+        }
+        
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogInformation("Using the injected logger from the App.");
+            _writer.WriteDate();
             
-            IContainer appContainer = builder.Build();
+            AsyncMessageWriter asyncMessageWriter = new AsyncMessageWriter(_loggerFactory.CreateLogger<AsyncMessageWriter>());
+            return asyncMessageWriter.WriteMessage("Here is a test message.");
+        }
 
-            AutofacServiceLocator locator = new AutofacServiceLocator(appContainer);
-            ServiceLocator.SetLocatorProvider(() => locator);
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public void Dispose()
+        {
         }
     }
 }
